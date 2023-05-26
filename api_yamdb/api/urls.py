@@ -8,7 +8,7 @@ app_name = 'api'
 router = routers.DefaultRouter()
 
 router.register(
-    r'reviews/(?P<review_id>\d+)/comments',
+    r'titles/(?P<title_id>\d+)/reviews/(?P<review_id>\d+)/comments',
     CommentViewSet,
     basename='comments'
 )
