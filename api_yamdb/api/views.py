@@ -11,10 +11,6 @@ from .serializers import (GenreSerializer, TitleCreateSerializer,
                          CommentSerializer, ReviewSerializer)
 
 
-class AuthorOrReadOnly:
-    pass
-        
-
 class CategoryViewSet(ModelMixinSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
