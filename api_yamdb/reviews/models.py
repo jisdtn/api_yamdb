@@ -6,6 +6,9 @@ from django.db import models
 class User(AbstractUser):
     pass
 
+class Title(models.Model):
+    pass
+
 
 class Review(models.Model):
 
