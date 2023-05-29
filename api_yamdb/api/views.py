@@ -8,8 +8,12 @@ from api.mixins import ModelMixinSet
 from reviews.models import Genre, Title, Category, Review
 from .serializers import (GenreSerializer, TitleCreateSerializer,
                           TitleReadSerializer, CategorySerializer,
-                         CommentSerializer)
+                         CommentSerializer, ReviewSerializer)
 
+
+class AuthorOrReadOnly:
+    pass
+        
 
 class CategoryViewSet(ModelMixinSet):
     queryset = Category.objects.all()
@@ -39,10 +43,12 @@ class TitleViewSet(viewsets.ModelViewSet):
             return TitleCreateSerializer
         return TitleReadSerializer
       
+      
 class CommentViewSet(viewsets.ModelViewSet):
     """
     Комментарии к Публикации.
     """
+    serializer_class = CommentSerializer
     serializer_class = CommentSerializer
     permission_classes = (AuthorOrReadOnly,
                           permissions.IsAuthenticatedOrReadOnly)
@@ -56,4 +62,22 @@ class CommentViewSet(viewsets.ModelViewSet):
         review_id = self.kwargs.get("review_id")
         instance_review = get_object_or_404(Review, id=review_id)
         serializer.save(author=self.request.user, review=instance_review)
-        
+    
+    
+class ReviewViewSet(viewsets.ModelViewSet):
+    """
+    Отзыв на произведение.
+    """
+    serializer_class = ReviewSerializer
+    permission_classes = (AuthorOrReadOnly,
+                          permissions.IsAuthenticatedOrReadOnly)
+    
+    def get_queryset(self):
+        title_id = self.kwargs.get("title_id")
+        title = get_object_or_404(Title, id=title_id)
+        return title.reviews.all()
+
+    def perform_create(self, serializer):
+        title_id = self.kwargs.get("title_id")
+        instance_title = get_object_or_404(Title, id=title_id)
+        serializer.save(author=self.request.user, title=instance_title)

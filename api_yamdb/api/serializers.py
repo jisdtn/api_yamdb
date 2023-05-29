@@ -1,8 +1,9 @@
 from rest_framework import serializers
+
 from django.shortcuts import get_object_or_404
 from datetime import datetime
 
-from reviews.models import Title, Category, Genre, Comment
+from reviews.models import Title, Category, Genre, Comment,  Review
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -63,4 +64,15 @@ class CommentSerializer(serializers.ModelSerializer):
 
     class Meta:
         fields = ('id', 'author', 'text', 'created')
-        model = Comment       
+        model = Comment
+
+        
+class ReviewSerializer(serializers.ModelSerializer):
+    author = serializers.SlugRelatedField(
+        read_only=True, slug_field='username'
+    )
+    title = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        fields = ('id', 'author', 'text', 'score', 'created')
+        model = Review
