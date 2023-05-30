@@ -1,6 +1,9 @@
-from django.contrib.auth.models import AbstractUser
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
+from rest_framework.authentication import get_user_model
+
+
+User = get_user_model()
 
 
 class Category(models.Model):
@@ -15,11 +18,9 @@ class Category(models.Model):
         db_index=True
     )
 
-
     class Meta:
         verbose_name = 'Категория'
         verbose_name_plural = 'Категории'
-
 
     def __str__(self):
         return self.name
@@ -37,11 +38,9 @@ class Genre(models.Model):
         db_index=True
     )
 
-
     class Meta:
         verbose_name = 'Жанр'
         verbose_name_plural = 'Жанры'
-
 
     def __str__(self):
         return self.name
@@ -80,11 +79,9 @@ class Title(models.Model):
         verbose_name='Жанр'
     )
 
-
     class Meta:
         verbose_name = 'Произведение'
         verbose_name_plural = 'Произведения'
-
 
     def __str__(self):
         return self.name
@@ -93,13 +90,14 @@ class Title(models.Model):
 class Review(models.Model):
 
     author = models.ForeignKey(
-            User, on_delete=models.CASCADE, related_name='reviews')
+        User, on_delete=models.CASCADE, related_name='reviews')
     title = models.ForeignKey(
-            Title, on_delete=models.CASCADE, related_name='reviews')
+        Title, on_delete=models.CASCADE, related_name='reviews')
     text = models.TextField()
-    score = models.IntegerField(default=0, validators=[MaxValueValidator(10), MinValueValidator(1)])
+    score = models.IntegerField(
+        default=0, validators=[MaxValueValidator(10), MinValueValidator(1)])
     created = models.DateTimeField(
-            'Дата добавления', auto_now_add=True, db_index=True)
+        'Дата добавления', auto_now_add=True, db_index=True)
 
     def rating(self):
         reviews = self.reviews.all()
@@ -108,10 +106,10 @@ class Review(models.Model):
         for i in reviews:
             rating = rating + score
         return rating / len(reviews)
-      
+
     def __str__(self):
         return self.text
- 
+
 
 class Comment(models.Model):
     author = models.ForeignKey(

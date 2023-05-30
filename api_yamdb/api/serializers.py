@@ -10,7 +10,7 @@ from rest_framework.validators import UniqueValidator
 from django.shortcuts import get_object_or_404
 from datetime import datetime
 
-from reviews.models import Title, Category, Genre, Comment,  Review
+from reviews.models import Title, Category, Genre, Comment, Review
 
 
 User = get_user_model()
@@ -131,7 +131,6 @@ class TitleCreateSerializer(serializers.ModelSerializer):
         model = Title
         fields = '__all__'
 
-    
     def validate_year(self, data):
         if data >= datetime.now().year:
             raise serializers.ValidationError(
@@ -151,7 +150,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Title
         fields = '__all__'
-        
+
 
 class CommentSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
@@ -164,7 +163,7 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ('id', 'author', 'text', 'created')
         model = Comment
 
-        
+
 class ReviewSerializer(serializers.ModelSerializer):
     author = serializers.SlugRelatedField(
         read_only=True, slug_field='username'
@@ -174,4 +173,3 @@ class ReviewSerializer(serializers.ModelSerializer):
     class Meta:
         fields = ('id', 'author', 'text', 'score', 'created')
         model = Review
-
