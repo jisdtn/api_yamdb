@@ -29,7 +29,7 @@ INSTALLED_APPS = [
 
     # Applications
     'users',
-    'rest_framework',
+    'reviews',
     'api',
 ]
 
