@@ -1,7 +1,7 @@
 from datetime import timedelta
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from rest_framework import filters, status, viewsets
+from rest_framework import filters, status, viewsets, permissions
 from rest_framework.authentication import get_user_model
 from rest_framework.decorators import action, api_view, permission_classes
 from rest_framework.pagination import PageNumberPagination
@@ -9,10 +9,19 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
-from .permissions import AdminOnly
+from reviews.models import Genre, Title, Category, Review
+
+from .permissions import AdminOnly, AuthorOrReadOnly
 from .serializers import (UserSerializer,
                           UserSignUpSerializer,
-                          UserTokenSerializer)
+                          UserTokenSerializer,
+                          GenreSerializer, TitleCreateSerializer,
+                          TitleReadSerializer, CategorySerializer,
+                          CommentSerializer, ReviewSerializer
+                          )
+from django.shortcuts import get_object_or_404
+from rest_framework.filters import SearchFilter
+from .mixins import ModelMixinSet
 
 
 User = get_user_model()
@@ -75,3 +84,72 @@ def GetTokenView(request):
         response = {"token": str(token)}
         return Response(data=response, status=status.HTTP_200_OK)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class CategoryViewSet(ModelMixinSet):
+    queryset = Category.objects.all()
+    serializer_class = CategorySerializer
+    permission_classes = (HZ,)
+    filter_backends = (SearchFilter, )
+    search_fields = ('name', )
+    lookup_field = 'slug'
+
+
+class GenreViewSet(ModelMixinSet):
+    queryset = Genre.objects.all()
+    serializer_class = GenreSerializer
+    permission_classes = (HZ,)
+    filter_backends = (SearchFilter,)
+    search_fields = ('name', )
+    lookup_field = 'slug'
+
+
+class TitleViewSet(viewsets.ModelViewSet):
+    queryset = Title.objects.all()
+    serializer_class = TitleReadSerializer
+    permission_classes = (HZ,)
+
+    def get_serializer_class(self):
+        if self.request.method in ('POST', 'PATCH',):
+            return TitleCreateSerializer
+        return TitleReadSerializer
+      
+      
+class CommentViewSet(viewsets.ModelViewSet):
+    """
+    Комментарии к Публикации.
+    """
+    serializer_class = CommentSerializer
+    serializer_class = CommentSerializer
+    permission_classes = (AuthorOrReadOnly,
+                          permissions.IsAuthenticatedOrReadOnly)
+
+    def get_queryset(self):
+        review_id = self.kwargs.get("review_id")
+        review = get_object_or_404(Review, id=review_id)
+        return review.comments.all()
+
+    def perform_create(self, serializer):
+        review_id = self.kwargs.get("review_id")
+        instance_review = get_object_or_404(Review, id=review_id)
+        serializer.save(author=self.request.user, review=instance_review)
+    
+    
+class ReviewViewSet(viewsets.ModelViewSet):
+    """
+    Отзыв на произведение.
+    """
+    serializer_class = ReviewSerializer
+    permission_classes = (AuthorOrReadOnly,
+                          permissions.IsAuthenticatedOrReadOnly)
+    
+    def get_queryset(self):
+        title_id = self.kwargs.get("title_id")
+        title = get_object_or_404(Title, id=title_id)
+        return title.reviews.all()
+
+    def perform_create(self, serializer):
+        title_id = self.kwargs.get("title_id")
+        instance_title = get_object_or_404(Title, id=title_id)
+        serializer.save(author=self.request.user, title=instance_title)
+
