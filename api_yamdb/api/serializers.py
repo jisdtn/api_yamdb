@@ -1,5 +1,6 @@
 import re
 from django.contrib.auth.tokens import default_token_generator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from rest_framework import serializers
 from rest_framework.authentication import get_user_model
 from rest_framework.exceptions import ValidationError
@@ -127,11 +128,15 @@ class TitleCreateSerializer(serializers.ModelSerializer):
         many=True
     )
 
+    rating = serializers.IntegerField(
+        source='reviews__score__avg',
+        read_only=True
+    )
+
     class Meta:
         model = Title
         fields = '__all__'
 
-    
     def validate_year(self, data):
         if data >= datetime.now().year:
             raise serializers.ValidationError(
@@ -146,7 +151,10 @@ class TitleReadSerializer(serializers.ModelSerializer):
         read_only=True,
         many=True
     )
-    rating = serializers.FloatField(read_only=True)
+    rating = serializers.IntegerField(
+        source='reviews__score__avg',
+        read_only=True
+    )
 
     class Meta:
         model = Title
@@ -154,24 +162,43 @@ class TitleReadSerializer(serializers.ModelSerializer):
         
 
 class CommentSerializer(serializers.ModelSerializer):
+
     author = serializers.SlugRelatedField(
-        read_only=True, slug_field='username'
+        slug_field='username',
+        read_only=True
     )
-    review = serializers.PrimaryKeyRelatedField(read_only=True)
-    title = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
-        fields = ('id', 'author', 'text', 'created')
+        fields = ('id', 'author', 'text', 'pub_date')
         model = Comment
 
         
 class ReviewSerializer(serializers.ModelSerializer):
+
     author = serializers.SlugRelatedField(
-        read_only=True, slug_field='username'
+        default=serializers.CurrentUserDefault(),
+        slug_field='username',
+        read_only=True
     )
-    title = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
-        fields = ('id', 'author', 'text', 'score', 'created')
+        fields = ('id', 'author', 'text', 'score', 'pub_date')
         model = Review
+
+    def validate(self, data):
+        if self.context['request'].method == 'POST':
+            user = self.context['request'].user
+            title_id = self.context['view'].kwargs['title_id']
+            if Review.objects.filter(author=user, title_id=title_id).exists():
+                raise serializers.ValidationError(
+                    'Нельзя опубликовать еще один отзыв'
+                )
+        return data
+
+    def validate_score(self, value):
+        if value < 1 or value > 10:
+            raise serializers.ValidationError('Недопустимое значение!')
+        return value
+
+
 

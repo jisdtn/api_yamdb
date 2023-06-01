@@ -1,6 +1,7 @@
 from datetime import timedelta
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.db.models import Avg
 from rest_framework import filters, status, viewsets, permissions
 from rest_framework.authentication import get_user_model
 from rest_framework.decorators import action, api_view, permission_classes
@@ -11,7 +12,7 @@ from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Genre, Title, Category, Review
 
-from .permissions import AdminOnly, AuthorOrReadOnly
+from .permissions import AdminOnly, IsAuthorAdminModerOrReadOnly
 from .serializers import (UserSerializer,
                           UserSignUpSerializer,
                           UserTokenSerializer,
@@ -55,7 +56,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
 @api_view(['post'])
 @permission_classes([AllowAny])
-def SignUpView(request):
+def sign_up_view(request):
     serializer = UserSignUpSerializer(data=request.data)
     if serializer.is_valid():
         validated_data = serializer.validated_data
@@ -74,7 +75,7 @@ def SignUpView(request):
 
 @api_view(['post'])
 @permission_classes([AllowAny])
-def GetTokenView(request):
+def get_token_view(request):
     serializer = UserTokenSerializer(data=request.data)
     if serializer.is_valid():
         username = request.data.get('username')
@@ -89,7 +90,7 @@ def GetTokenView(request):
 class CategoryViewSet(ModelMixinSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = (HZ,)
+    permission_classes = ()
     filter_backends = (SearchFilter, )
     search_fields = ('name', )
     lookup_field = 'slug'
@@ -98,16 +99,18 @@ class CategoryViewSet(ModelMixinSet):
 class GenreViewSet(ModelMixinSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = (HZ,)
+    permission_classes = ()
     filter_backends = (SearchFilter,)
     search_fields = ('name', )
     lookup_field = 'slug'
 
 
 class TitleViewSet(viewsets.ModelViewSet):
-    queryset = Title.objects.all()
+
+    queryset = Title.objects.all().annotate(
+        Avg('reviews__score')).order_by('name')
     serializer_class = TitleReadSerializer
-    permission_classes = (HZ,)
+    permission_classes = ()
 
     def get_serializer_class(self):
         if self.request.method in ('POST', 'PATCH',):
@@ -120,9 +123,7 @@ class CommentViewSet(viewsets.ModelViewSet):
     Комментарии к Публикации.
     """
     serializer_class = CommentSerializer
-    serializer_class = CommentSerializer
-    permission_classes = (AuthorOrReadOnly,
-                          permissions.IsAuthenticatedOrReadOnly)
+    permission_classes = [IsAuthorAdminModerOrReadOnly]
 
     def get_queryset(self):
         review_id = self.kwargs.get("review_id")
@@ -140,8 +141,7 @@ class ReviewViewSet(viewsets.ModelViewSet):
     Отзыв на произведение.
     """
     serializer_class = ReviewSerializer
-    permission_classes = (AuthorOrReadOnly,
-                          permissions.IsAuthenticatedOrReadOnly)
+    permission_classes = [IsAuthorAdminModerOrReadOnly]
     
     def get_queryset(self):
         title_id = self.kwargs.get("title_id")
