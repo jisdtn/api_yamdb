@@ -76,7 +76,7 @@ class UserSignUpSerializer(serializers.Serializer):
             user = User.objects.get(email=email)
             if user.username != username:
                 raise ValidationError(
-                    {'email': ['Email must be unique!',]}
+                    {'email': ['Email must be unique!', ]}
                 )
         return data
 
@@ -97,7 +97,7 @@ class UserTokenSerializer(serializers.Serializer):
         confirmation_code = data['confirmation_code']
         if not default_token_generator.check_token(user, confirmation_code):
             raise serializers.ValidationError(
-                {'confirmation_code': ['Wrong confirmation code!',]}
+                {'confirmation_code': ['Wrong confirmation code!', ]}
             )
         return data
 
