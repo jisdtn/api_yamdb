@@ -10,7 +10,7 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'api_yamdb.settings')
 django.setup()
 
 
-path = "D://Dev//api_yamdb//api_yamdb//static//data"
+path = "static/data/"
 os.chdir(path)
 
 
