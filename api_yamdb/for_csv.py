@@ -5,8 +5,6 @@ from reviews.models import Category, Comment, Genre, GenreTitle, Review, Title
 from users.models import User
 
 
-
-
 path = "static/data/"
 os.chdir(path)
 
