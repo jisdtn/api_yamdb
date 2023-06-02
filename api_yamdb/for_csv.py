@@ -1,13 +1,10 @@
 import csv
 import os
-
-import django
-
+import django_settings_module
 from reviews.models import Category, Comment, Genre, GenreTitle, Review, Title
 from users.models import User
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'api_yamdb.settings')
-django.setup()
+
 
 
 path = "static/data/"
