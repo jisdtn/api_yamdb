@@ -1,18 +1,15 @@
 import re
+from datetime import datetime
+
 from django.contrib.auth.tokens import default_token_generator
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.authentication import get_user_model
 from rest_framework.exceptions import ValidationError
 from rest_framework.fields import EmailValidator
 from rest_framework.generics import get_object_or_404
 from rest_framework.validators import UniqueValidator
-
-from django.shortcuts import get_object_or_404
-from datetime import datetime
-
-from reviews.models import Title, Category, Genre, Comment,  Review
-
+from reviews.models import Category, Comment, Genre, Review, Title
 
 User = get_user_model()
 
@@ -162,7 +159,7 @@ class TitleReadSerializer(serializers.ModelSerializer):
         read_only_fields = (
             'id', 'name', 'year', 'rating', 'description',
         )
-        
+
 
 class CommentSerializer(serializers.ModelSerializer):
 
@@ -176,7 +173,7 @@ class CommentSerializer(serializers.ModelSerializer):
         fields = ('id', 'author', 'text', 'pub_date')
         model = Comment
 
-        
+
 class ReviewSerializer(serializers.ModelSerializer):
 
     author = serializers.SlugRelatedField(
@@ -186,7 +183,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-      
+
         fields = ('id', 'author', 'text', 'score', 'pub_date')
         model = Review
 
@@ -204,6 +201,3 @@ class ReviewSerializer(serializers.ModelSerializer):
         if value < 1 or value > 10:
             raise serializers.ValidationError('Недопустимое значение!')
         return value
-
-
-
