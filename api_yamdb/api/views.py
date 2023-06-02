@@ -1,7 +1,10 @@
 from datetime import timedelta
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django_filters.rest_framework import DjangoFilterBackend
+
 from django.db.models import Avg
+
 from rest_framework import filters, status, viewsets, permissions
 from rest_framework.authentication import get_user_model
 from rest_framework.decorators import action, api_view, permission_classes
@@ -11,8 +14,10 @@ from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
 
 from reviews.models import Genre, Title, Category, Review
+from api.filers import TitleFilter
 
-from .permissions import AdminOnly, IsAuthorAdminModerOrReadOnly
+from .permissions import AdminOnly, AuthorOrReadOnly, AdminOrReadOnly, IsAuthorAdminModerOrReadOnly
+
 from .serializers import (UserSerializer,
                           UserSignUpSerializer,
                           UserTokenSerializer,
@@ -90,7 +95,7 @@ def get_token_view(request):
 class CategoryViewSet(ModelMixinSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
-    permission_classes = ()
+    permission_classes = (AdminOrReadOnly, )
     filter_backends = (SearchFilter, )
     search_fields = ('name', )
     lookup_field = 'slug'
@@ -99,7 +104,7 @@ class CategoryViewSet(ModelMixinSet):
 class GenreViewSet(ModelMixinSet):
     queryset = Genre.objects.all()
     serializer_class = GenreSerializer
-    permission_classes = ()
+    permission_classes = (AdminOrReadOnly, )
     filter_backends = (SearchFilter,)
     search_fields = ('name', )
     lookup_field = 'slug'
@@ -110,7 +115,9 @@ class TitleViewSet(viewsets.ModelViewSet):
     queryset = Title.objects.all().annotate(
         Avg('reviews__score')).order_by('name')
     serializer_class = TitleReadSerializer
-    permission_classes = ()
+    permission_classes = (AdminOrReadOnly, )
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = TitleFilter
 
     def get_serializer_class(self):
         if self.request.method in ('POST', 'PATCH',):

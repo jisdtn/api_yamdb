@@ -107,14 +107,14 @@ class UserTokenSerializer(serializers.Serializer):
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
+        exclude = ('id', )
         model = Category
-        fields = '__all__'
 
 
 class GenreSerializer(serializers.ModelSerializer):
     class Meta:
+        exclude = ('id', )
         model = Genre
-        fields = '__all__'
 
 
 class TitleCreateSerializer(serializers.ModelSerializer):
@@ -159,6 +159,9 @@ class TitleReadSerializer(serializers.ModelSerializer):
     class Meta:
         model = Title
         fields = '__all__'
+        read_only_fields = (
+            'id', 'name', 'year', 'rating', 'description',
+        )
         
 
 class CommentSerializer(serializers.ModelSerializer):
@@ -169,6 +172,7 @@ class CommentSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
+
         fields = ('id', 'author', 'text', 'pub_date')
         model = Comment
 
@@ -182,6 +186,7 @@ class ReviewSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
+      
         fields = ('id', 'author', 'text', 'score', 'pub_date')
         model = Review
 

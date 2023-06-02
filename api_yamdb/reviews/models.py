@@ -1,7 +1,7 @@
 from rest_framework.authentication import get_user_model
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-
+from users.models import User
 
 User = get_user_model()
 
@@ -94,7 +94,7 @@ class Review(models.Model):
     )
     title = models.ForeignKey(
             Title, on_delete=models.CASCADE, related_name='reviews')
-    text = models.TextField()
+    text = models.TextField(max_length=200)
     score = models.SmallIntegerField(default=1, validators=[MinValueValidator(1), MaxValueValidator(10)])
     pub_date = models.DateTimeField(
             'Дата добавления', auto_now_add=True, db_index=True)
@@ -124,3 +124,11 @@ class Comment(models.Model):
 
     def __str__(self):
         return self.text
+
+
+class GenreTitle(models.Model):
+    genre = models.ForeignKey(Genre, on_delete=models.CASCADE)
+    title = models.ForeignKey(Title, on_delete=models.CASCADE)
+
+    def __str__(self) -> str:
+        return f'{self.genre} {self.title}'
