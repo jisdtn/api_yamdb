@@ -1,6 +1,8 @@
 import os
+from pathlib import Path
 
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'api_yamdb.settings')
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'p&l%385148kslhtyn^##a1)ilz@4zqj=rq&agdol^##zgl9(vs'
@@ -24,12 +26,13 @@ INSTALLED_APPS = [
     # Third party libraries
     'rest_framework',
     'rest_framework_simplejwt',
+    'django_filters',
 
     # Applications
-    'users',
-    'reviews',
     'api',
-    'django_filters',
+    'reviews',
+    'titles',
+    'users',
 ]
 
 MIDDLEWARE = [
