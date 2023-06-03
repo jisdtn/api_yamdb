@@ -4,7 +4,7 @@ from rest_framework.authentication import get_user_model
 
 from users.models import User
 
-User = get_user_model()
+# User = get_user_model()
 
 
 class Category(models.Model):
@@ -104,9 +104,9 @@ class Review(models.Model):
         'Дата добавления', auto_now_add=True, db_index=True)
 
     class Meta:
-        ordering = ["-pub_date"]
+        ordering = ("-pub_date",)
         constraints = (models.UniqueConstraint(
-            fields=['title', 'author'], name='unique_review'),
+            fields=('title', 'author'), name='unique_review'),
         )
 
     def __str__(self):
@@ -124,7 +124,7 @@ class Comment(models.Model):
         'Дата добавления', auto_now_add=True, db_index=True)
 
     class Meta:
-        ordering = ["-pub_date"]
+        ordering = ("-pub_date",)
 
     def __str__(self):
         return self.text
