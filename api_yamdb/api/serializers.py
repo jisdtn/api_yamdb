@@ -2,10 +2,11 @@ import re
 from datetime import datetime
 
 from django.contrib.auth.tokens import default_token_generator
+from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.authentication import get_user_model
-from rest_framework.exceptions import ValidationError
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.fields import EmailValidator
 from rest_framework.generics import get_object_or_404
 from rest_framework.validators import UniqueValidator
@@ -36,14 +37,8 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = [
-            'username',
-            'email',
-            'first_name',
-            'last_name',
-            'bio',
-            'role',
-        ]
+        fields = ('username', 'email', 'first_name',
+                  'last_name', 'bio', 'role', )
 
     def validate_username(self, value):
         if value == 'me':
@@ -51,6 +46,12 @@ class UserSerializer(serializers.ModelSerializer):
         if not re.match(r"^[\w.@+-]+$", value):
             raise ValidationError('Incorrect username!')
         return value
+
+    def validate_role(self, role):
+        user = self.context['request'].user
+        if not (user.is_admin or user.is_superuser):
+            raise PermissionDenied('Only admins can change roles!')
+        return role
 
 
 class UserSignUpSerializer(serializers.Serializer):
@@ -63,21 +64,20 @@ class UserSignUpSerializer(serializers.Serializer):
         required=True
     )
 
-    def validate_username(self, value):
-        if value == 'me':
+    def validate_username(self, username):
+        if username == 'me':
             raise serializers.ValidationError('Can\'t use this username!')
-        return value
+        return username
 
     def validate(self, data):
         username = data['username']
         email = data['email']
-        if User.objects.filter(username=username).exists():
-            user = User.objects.get(username=username)
+        user = User.objects.filter(
+            Q(username=username) | Q(email=email)).first()
+        if user:
             if user.email != email:
                 raise ValidationError('Wrong email!')
-        if User.objects.filter(email=email).exists():
-            user = User.objects.get(email=email)
-            if user.username != username:
+            elif user.username != username:
                 raise ValidationError(
                     {'email': ['Email must be unique!', ]}
                 )

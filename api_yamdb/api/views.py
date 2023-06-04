@@ -48,12 +48,10 @@ class UserViewSet(viewsets.ModelViewSet):
         user = request.user
         serializer = UserSerializer(user)
         if request.method == 'PATCH':
-            serializer = UserSerializer(user, data=request.data, partial=True)
+            serializer = UserSerializer(
+                user, data=request.data,
+                partial=True, context={'request': request})
             if serializer.is_valid(raise_exception=True):
-                if (request.data.get('role')
-                   and (user.role != 'admin' or not user.is_superuser)):
-                    return Response(serializer.data,
-                                    status=status.HTTP_403_FORBIDDEN)
                 serializer.save()
         return Response(serializer.data, status=status.HTTP_200_OK)
 
