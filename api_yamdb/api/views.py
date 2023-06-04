@@ -1,5 +1,6 @@
 from datetime import timedelta
 
+from api.filers import TitleFilter
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
 from django.db.models import Avg
@@ -13,12 +14,8 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import AccessToken
-
-from api.filers import TitleFilter
-
 from reviews.models import Review
 from titles.models import Category, Genre, Title
-
 
 from .mixins import ModelMixinSet
 from .permissions import (AdminOnly, AdminOrReadOnly,
